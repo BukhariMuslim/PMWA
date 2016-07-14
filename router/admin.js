@@ -11,7 +11,9 @@ router = function(app){
 	r.put('/profile/updateProfile', auth.user, h.updateProfile);
 	r.get('/warnet/', auth.user, h.warnet);
 	r.get('/warnet/new', auth.user, h.newWarnet);
+	r.get('/warnet/edit/:id', auth.user, h.editWarnet);
 	r.post('/warnet/saveWarnet', auth.user, h.saveWarnet);
+	r.put('/warnet/updateWarnet', auth.user, h.updateWarnet);
 	r.delete('/warnet/delete/:id', auth.user, h.deleteWarnet);
 	r.get('/warnet/:id', auth.net, h.showWarnet);
 	r.get('/admin/logout', auth.user, h.logout);

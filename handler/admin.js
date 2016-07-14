@@ -107,6 +107,51 @@ var newWarnet = function(req, res){
 		});
 };
 
+var editWarnet = function(req, res){
+	var netId = req.params.id,
+		username = req.session.user;
+
+	User
+		.where({ "mbr_username" : username })
+		.fetch()
+		.then(function(current_user){
+			current_user = current_user.toJSON();
+			Warnet.where({ "net_id" : netId })
+				.fetch()
+				.then(function (current_net) {
+					current_net = current_net.toJSON();
+					User.where({ "mbr_id" : current_net.net_owner })
+					.fetch()
+					.then(function(current_net_user) {
+						Pc.query('where', 'pc_net_id', '=', netId)
+						.count('pc_net_id')
+						.then(function(current_pc){
+							console.log(current_pc);
+							res.render('./admin/add_net.html',{
+								current_user: current_user,
+								current_net: current_net,
+								current_net_user: current_net_user.toJSON(),
+								isBelong: current_user.mbr_username == username,
+								isEdit : true
+							});
+						}); 
+					})
+					.catch(function(err){
+						console.log("Warnet user :" + err);
+						res.sendStatus(500);
+					});
+				})
+				.catch(function(err){
+					console.log("Warnet user :" + err);
+					res.sendStatus(500);
+				});
+		})
+		.catch(function(err){
+			console.log("Warnet user :" + err);
+			res.sendStatus(500);
+		});
+};
+
 var saveWarnet = function (req, res) {
 	var body = req.body,
 		target_path,
@@ -194,6 +239,85 @@ var saveWarnet = function (req, res) {
 			console.log("Warnet user :" + err);
 			res.sendStatus(500);
 		});
+};
+
+var updateWarnet = function (req, res) {
+	var body = req.body,
+		dirname = "/public/user/img/temp",
+		file = req.file,
+		tmp_path,
+		target_path,
+		name = body.name,
+		kota = body.kota,
+		phone = body.phone,
+		alamat = body.alamat,
+		keterangan = body.keterangan,
+		latLng = body.latLng,
+		printer = body.printer,
+		pulsa = body.pulsa,
+		game = body.game,
+		ketik = body.ketik,
+		acc = body.acc,
+		otr = body.otr,
+		jlh = body.jlh,
+		err_msg = "Update Warnet Gagal.",
+		current_user;
+
+	if (file) {
+		tmp_path = file.path;
+	}
+
+	if (!jlh) jlh = 0;	
+
+	new Warnet()
+	.where({ 'net_id': body.id })
+	.save({
+		'net_name': name,
+		'net_city': kota,
+		'net_map': latLng,
+		'net_addr': alamat,
+		'net_desc': keterangan,
+		'net_phone': phone,
+		'net_f_printer': !!printer,
+		'net_f_pulsa': !!pulsa,
+		'net_f_game': !!game,
+		'net_f_ketik': !!ketik,
+		'net_f_acc': !!acc,
+		'net_f_otr': !!otr,
+		'net_created': Date.now()
+	}, { 
+		path: true,
+		method: 'update' 
+	})
+	.then(function(post) {
+		target_path = __dirname + "/public/user/img/net/net" + body.id + ".jpg";
+		target_path = target_path.replace("\handler", "");
+		if (tmp_path) {
+			fs.rename(tmp_path, target_path, function (err) {
+				if (err) console.log(err);
+			})
+		}
+		new Pc()
+		.where({ "pc_net_id" : req.params.id })
+		.destroy()
+		.then(function(model){
+			for (var i = 0; i < jlh; i++) {
+				new Pc({
+					'pc_mbr_id': '',
+					'pc_net_id': body.id,
+					'pc_stat': true
+				}).save();
+			}
+		});
+
+		res.end(JSON.stringify({status: 200, success: "Warnet Berhasil diupdate"}))		
+	})
+	.catch(function(err){
+		fs.unlink(tmp_path, function (err) {
+			if (err) console.log(err);
+		})
+		res.status(409).send(err_msg + " " + err);
+	});
 };
 
 var warnet = function(req, res){
@@ -372,7 +496,9 @@ handler = {
 	warnet: warnet,
 	newWarnet: newWarnet,
 	showWarnet: showWarnet,
+	editWarnet: editWarnet,
 	saveWarnet: saveWarnet,
+	updateWarnet: updateWarnet,
 	deleteWarnet : deleteWarnet
 };
 
