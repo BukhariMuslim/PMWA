@@ -1,0 +1,64 @@
+<header>
+    <nav class="teal lighten-2">
+        <div class="container">
+            <div class="nav-wrapper">
+                <a href="/" class="brand-logo">CariWarnet</a>
+                <a href="#" data-activates="mobile-demo" class="button-collapse right"><i class="material-icons">menu</i></a>
+                <ul class="right hide-on-med-and-down">
+                    <li>
+                        <form name="search_1" method="get" action="/">
+                            <div class="input-field">
+                                <input id="search1" type="search" name="search" placeholder="Pencarian" value="">
+                                <label for="search1"><i class="material-icons">search</i></label>
+                                <i class="material-icons">close</i>
+                            </div>
+                        </form>
+                    </li>
+                    <li >
+                        <a href="#" class="waves-effect waves-light dropdown-button" data-activates="dropdownUser1">
+                            <img src="/profile_img/{{ current_user.mbr_id }}" alt="profile image" class="circle responsive-img profile profile-img">
+                            {{ current_user.mbr_name }}
+                        </a>
+                        <ul id="dropdownUser1" class='dropdown-content'>
+                            <li><a href="/" class="waves-effect">Home</a></li>
+                            <li><a href="/profile/{{ current_user.mbr_id }}" class="waves-effect">Profile</a></li>
+                            <li><a href="/warnet" class="waves-effect">Warnet</a></li>
+                            <li class="divider"></li>
+                            <li><a href="/admin/logout" class="waves-effect">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="side-nav" id="mobile-demo">
+                    <li>
+                        <form name="search_2" method="get" action="/">
+                            <div class="input-field">
+                                <input id="search2" type="search" name="search" placeholder="Pencarian" value="">
+                                <label for="search2"><i class="material-icons">search</i></label>
+                                <i class="material-icons">close</i>
+                            </div>
+                        </form>
+                    </li>
+                    <li class="no-padding">
+                        <ul class="collapsible collapsible-accordion">
+                            <li>
+                                <a href="#" class="waves-effect waves-light collapsible-header">
+                                    <img src="/profile_img/{{ current_user.mbr_id }}" alt="profile image" class="circle responsive-img profile profile-img side-pic"> 
+                                    {{ current_user.mbr_name }}
+                                </a>
+                                <div class="collapsible-body">
+                                    <ul>
+                                        <li><a href="/" class="waves-effect">Home</a></li>
+                                        <li><a href="/profile/{{ current_user.mbr_id }}" class="waves-effect">Profile</a></li>
+                                        <li><a href="/warnet" class="waves-effect">Warnet</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href="/admin/logout" class="waves-effect">Logout</a></li>
+                                    </ul>
+                                </div>
+                            <li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>

@@ -1,19 +1,36 @@
 {
-  "name": "pmwa",
+  "name": "cariwarnet",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/BukhariMuslim/PMWA.git"
+  "author": "Jay",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "body-parser": "^1.15.2",
+    "bookshelf": "^0.9.5",
+    "bootstrap": "^3.3.6",
+    "connect-redis": "^3.1.0",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.14.0",
+    "express-session": "^1.13.0",
+    "fs": "0.0.2",
+    "knex": "^0.11.7",
+    "multer": "^1.1.0",
+    "nunjucks": "^2.4.2",
+    "nunjucks-date-filter": "^0.1.1",
+    "passport": "^0.3.2",
+    "path": "^0.12.7",
+    "pg": "^6.0.1",
+    "redis": "^2.6.2",
+    "session-file-store": "^0.2.0",
+    "sqlite3": "^3.1.4",
+    "uuid": "^2.0.2"
   },
-  "author": "Bukhari",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/BukhariMuslim/PMWA/issues"
-  },
-  "homepage": "https://github.com/BukhariMuslim/PMWA#readme"
+  "devDependencies": {
+    "bootstrap": "^3.3.6"
+  }
 }

@@ -1,0 +1,129 @@
+{% import "warnet.html" as warnetTmp %}
+{% import "quick_info.html" as infoTmp %}
+
+{% extends "base.html" %}
+
+{%- block title %}Halaman Depan{%- endblock %}
+
+{%- block head %}
+<script>
+		$(function(){
+			function init() {
+				window.addEventListener('scroll', function(e){
+					var distanceY = window.pageYOffset || document.documentElement.scrollTop,
+						shrinkOn = 100;
+
+					if (distanceY > shrinkOn) {
+						$("header:not(.smaller)").addClass("smaller");
+						$("img.profile-img:not(.side-pic):not(.small-pic)").addClass("small-pic");
+					} else {
+						$("header.smaller").removeClass("smaller");
+						$("img.profile-img.small-pic:not(.side-pic)").removeClass("small-pic");
+					}
+				});
+
+				$("img.profile:not(.side-pic)").parent().parent().on({
+					mouseenter: function () {
+						$("img.profile:not(.side-pic):not(z-depth-1)").addClass("z-depth-1");
+					},
+					mouseleave: function () {
+						$("img.profile.z-depth-1:not(.side-pic)").removeClass("z-depth-1");
+					}
+				});
+			};
+			
+			window.onload = init();
+			
+            var par = getParameterByName("success");
+            if (par) {
+                if (par == "0" || par == "1") $("#modalSuccess").openModal();
+                window.history.pushState("", document.title, "/");
+            }
+            
+			$(".button-collapse").sideNav({
+					closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+				}
+			);
+						
+			$('.dropdown-button').dropdown({
+					gutter: 0, // Spacing from edge
+					belowOrigin: true, // Displays dropdown below the button
+					alignment: 'left' // Displays dropdown with edge aligned to the left of button
+				}
+			);
+		});
+		
+	</script>
+{%- endblock %}
+
+{% block bodyAttr %}id="main-page" class="blue-grey lighten-5"{% endblock %}
+
+{%- block content %}
+	{%- include "./nav_user.html" ignore missing -%}
+	<main>
+		<div class="container">
+			<div class="row">
+				<div class="col s12 m8 push-m4 l9 push-l3">
+					<!--{{ warnetTmp.search(warnet) }}-->
+
+					{% for warnet in current_warnet %}
+						{{ warnetTmp.warnetList(warnet) }}
+					{% else %}
+						<div class="card small">
+							<div class="card-content">
+								<p>Tidak ada warnet yang ditemukan.</p>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+				<div class="col s12 m4 pull-m8 l3 pull-l9">
+                    {{ infoTmp.info_panel(new_net) }}
+                </div>
+			</div>
+		</div>
+	</main>
+    
+    <div id="modalSuccess" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="Text">
+				<!--<?php
+					if (!empty($_GET["success"])) {
+                        if ($_GET["success"] == "1") echo "Selamat Datang, \"$sessionName\""; 
+                        else echo "Logout berhasil";                         
+                    }
+                    else echo "Logout berhasil";
+				?>-->
+			</p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div> 
+
+<!--<h1>Login</h1>
+<form action="/result" method="post">
+	Username: <input type="text" name="username"> <br>
+	Password: <input type="password" name="password"><br>
+	<input type="submit"><br>
+</form>-->
+<!--<section>
+	{%- for post in posts %}
+	<article>
+		<header>
+			<h1>{{ post.title }}</h1>
+			<span>Author: {{ post.username }}</span>
+		</header>
+		{{ post.content }}
+	</article>
+	{%- endfor %}
+</section>-->
+{%- endblock %}
+
+{%- block footer %}
+	<footer class="page-footer teal lighten-2 main">
+		<div class="footer-copyright">
+			<div class="container">© 2016 Copyright Cari Warnet<div>
+		</div>
+	</footer>
+{%- endblock %}

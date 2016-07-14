@@ -1,0 +1,60 @@
+{% macro info_panel(new_net, top_net) %}
+<div class="card-panel">
+    <div class="row">
+        <div class="col s12">
+            <h5>New Warnet Release</h5>
+            <ul class="collapsible" data-collapsible="accordion">
+                {% for net in new_net %}
+                    <li>
+                        <div class="collapsible-header{{ " active" if loop.first else "" }}">
+                            <a href="./warnet/{{ net.net_id }}">{{ net.net_name }}</a>
+                        </div>
+                        <div class="collapsible-body">
+                            <p>
+                                Dibuka di kota {{ net.net_city }} ({{ net.net_addr }})
+                            </p>
+                        </div>
+                    </li>
+                {% else %}
+                    <li>
+                        <div class="collapsible-header">
+                            Tidak ada data.
+                        </div>
+                        <div class="collapsible-body">
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col s12">
+            <h5>Top 5 Warnet</h5>
+            <div class="collection">
+                {% for net in top_net %}
+                    <a href="./warnet/{{ net.net_id }}" class="collection-item">{{ net.net_name }}</a>
+                {% else %}
+                   <p style="padding-left: 15px">Tidak ada data.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro info_milik(own_net, user) %}
+<div class="card-panel hide">
+    <div class="row">
+        <div class="col s12">
+            <h5>Warnet milik - {{ user.mbr_name }}</h5>
+            <div class="collection">
+                {% for net in own_net %}
+                    <a href="./warnet/{{ net.net_id }}" class="collection-item">{{ net.net_name }}</a>
+                {% else %}
+                   <p style="padding-left: 15px">Tidak ada data.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

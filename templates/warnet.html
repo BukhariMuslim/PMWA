@@ -1,0 +1,30 @@
+{% macro warnetList(current_warnet) %}
+<div class="card small">
+    <div class="card-image">
+        <img src="/net_img/{{ current_warnet.net_id if current_warnet.net_id else 0 }}" width="36px" alt="warnet">
+        <span class="card-title strokeme">{{ current_warnet.net_name }}</span>
+    </div>
+    <div class="card-content">
+        <small class="grey-text text-lighten-1">- {{ current_warnet.net_addr }}</i></small>
+        <p>{{ current_warnet.net_desc }}</p>
+    </div>
+    <div class="card-action" style="text-align: right">
+        <a href="./warnet/{{ current_warnet.net_id }}" class="waves-effect waves-light btn white-text">Baca lebih lanjut</a>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro search(result) %}
+<div class="card teal lighten-5">
+    <div class="card-content">
+        {% if result.total == 0 %}
+            {% set kata = "Tidak ada data yang ditemukan" %}        
+        {% else %}
+            {% set kata = "Menampilkan <b>" + result.total + "</b> data" %}
+        {% endif %}
+        {{ kata }} berdasarkan kata kunci <b>{{ result.par }}</b>.
+        <i class="material-icons right use-pointer tooltipped" data-tooltip="Hapus Pencarian" onclick="document.location = '/'">close</i>
+    </div>
+</div>
+{% endmacro %}
+    

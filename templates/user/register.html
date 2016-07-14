@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{%- block title %}Halaman Pendaftaran Pengguna{%- endblock %}
+
+{%- block head %}
+	<script>
+		$(function() {
+			// var request = new XMLHttpRequest();
+			// request.onreadystatechange = function() {
+			// 	if (request.readyState === 4) {
+			// 		if (request.status === 200) {
+			// 			// document.body.className = 'ok';
+			// 			// console.log(request.responseText);
+			// 		} else {
+			// 			$("#modalFail").openModal();
+			// 			window.history.pushState("", document.title, "/login");
+			// 		}
+			// 	}
+			// };
+			// request.open("GET", url , true);
+			// request.send(null);
+
+			$('#send').click(function(){
+				$.ajax({
+					type: 'POST', 
+					url: '/registering', 
+					dataType: 'json',
+					data: $('#form_register').serialize(),
+					timeout: 5000,
+					success: function (data, status, jqXHR) {
+                        var context = JSON.parse(jqXHR.responseText);
+                        if (context.success) $("#pInfo").html(context.success);
+                        else $("#pInfo").html("Pendaftaran berhasil");
+                        $("#modalInfo").openModal();
+						$(':input').val('');
+					},
+					beforeSend: function(){
+						$("#submit_text").html("Mendaftarkan...");
+						$('#send').prop( "disabled", true);
+					},
+					error: function(xhr, textStatus, errorThrownx){
+						if (xhr.status === 409) {
+							$("#pInfo").html(xhr.responseText);
+							$("#modalInfo").openModal();
+						}
+					},
+					complete : function() {
+						// window.history.pushState("", document.title, "/login");
+						$("#submit_text").html("Daftar");
+						$('#send').prop( "disabled", false);
+					}
+				});
+				return false;
+			});
+
+			$('#date').pickadate({
+				selectMonths: true, // Creates a dropdown to control month
+				selectYears: 15 // Creates a dropdown of 15 years to control year
+				,onSet: function( arg ){
+					console.log(arg);
+					if ( 'select' in arg ){ //prevent closing on selecting month/year
+						this.close();
+					}
+				}
+			});
+
+			// $('#date').on('change', function(){
+			// 	$('.datepicker').hide();
+			// });
+		});
+		
+        function check(input) {
+			if (input.value != document.getElementById('password').value) {
+				input.setCustomValidity('Password harus sama.');
+			} else {
+				// input is valid -- reset the error message
+				input.setCustomValidity('');
+				input.validity.valid = input.checkValidity();
+			}
+		}
+		
+        function mask(o, f) {
+            setTimeout(function () {
+                var v = mphone(o.value);
+                if (v != o.value) {
+                    o.value = v;
+                }
+            }, 1);
+        }
+
+        function mphone(v) {
+            var r = v.replace(/\D/g,"");
+            r = r.replace(/^0/,"");
+            if (r.length > 10) {
+                // 11+ digits. Format as 5+4.
+                r = r.replace(/^(\d{4})(\d{4})(\d{4}).*/,"$1 $2 $3");
+            }
+            else if (r.length > 5) {
+                // 6..10 digits. Format as 4+4
+                r = r.replace(/^(\d{3})(\d{,4})(\d{0,4}).*/,"($1) $2 $3");
+            }
+            else if (r.length > 2) {
+                // 3..5 digits. Add (0XX..)
+                r = r.replace(/^(\d{3})(\d{0,5})/,"($1) $2");
+            }
+            else {
+                // 0..2 digits. Just add (0XX
+				if (r !== "") r = r.replace(/^(\d*)/, "($1");
+            }
+            return r;
+        }
+	</script>
+{%- endblock %}
+
+{% block bodyAttr %} class="rainbow-background"{% endblock %}
+
+{%- block content %}
+	<div class="container">
+		<div class="row">
+			<div class="col card-panel hoverable alpha-dark white-text login-form">
+				<form id="form_register" name="form_register" method="post" action="/registering" class="card-content">
+                    <div class="row">
+                        <div class="col s10">
+                            <h3 clas="valign">Daftar Akun Baru</h3>
+                        </div>
+                        <div class="col s2">
+                            <a href="/" class="waves-effect white waves btn-floating tooltipped right" data-tooltip="Batal">
+                                <i class="material-icons grey-text">close</i>
+                            </a>
+                        </div>
+                    </div>
+					<div class="row">
+						<div class="input-field col m12 s12">
+							<input id="username" name="username" placeholder="Username" type="text" class="validate" autofocus required>
+							<label for="username">User ID</label>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="password" name="password" placeholder="Password" type="password" class="validate" required>
+							<label for="password">Password</label>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="confPassword" name="confPassword" placeholder="Konfirmasi Password" type="password" class="validate" oninput="check(this)" required>
+							<label for="confPassword">Konfirmasi Password</label>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="name" name="name" placeholder="Nama" type="text" class="validate" required>
+							<label for="name">Nama</label>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="email" name="email" placeholder="E-mail" type="email" class="validate" required>
+							<label for="email">E-mail</label>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="tempatLahir" name="tempatLahir" placeholder="Tempat Lahir" type="text" class="validate">
+							<label for="tempatLahir">Tempat Lahir</label>
+						</div>
+						<div class="cld-field col m6 s12 left-align">
+							<label for="dateLahir">Tanggal Lahir</label>
+							<input id="dateLahir" type="date" name="dateLahir" class="datepicker" style="height: 2.5rem !important" required>
+						</div>
+						<div class="input-field col m6 s12">
+							<input id="phone" name="phone" placeholder="Telepon" type="text" class="validate" onblur="mask(this, mphone)" onkeypress="mask(this, mphone)">
+							<label for="phone">Telepon</label>
+						</div>
+					</div>
+					<div class="left">
+						<a href="/login" class="waves-effect waves btn-flat tooltipped grey-text" data-tooltip="Sudah memiliki akun?">
+							Login
+						</a>
+					</div>
+					<div class="right" style="margin-left: 10px !important">
+						<button id="send" class="btn waves-effect white grey-text darken-3" type="submit" name="action">
+							<span id="submit_text">Daftar</span>
+							<i class="material-icons right grey-text darken-3">send</i>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Modal Structure -->
+	<div id="modalInfo" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="pInfo"></p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+
+<!--<h1>Login</h1>
+<form action="/result" method="post">
+	Username: <input type="text" name="username"> <br>
+	Password: <input type="password" name="password"><br>
+	<input type="submit"><br>
+</form>-->
+<!--<section>
+	{%- for post in posts %}
+	<article>
+		<header>
+			<h1>{{ post.title }}</h1>
+			<span>Author: {{ post.username }}</span>
+		</header>
+		{{ post.content }}
+	</article>
+	{%- endfor %}
+</section>-->
+{%- endblock %}

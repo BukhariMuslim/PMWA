@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{%- block title %}Halaman Login Pengguna{%- endblock %}
+
+{%- block head %}
+	<script>
+		$(function() {
+			// var request = new XMLHttpRequest();
+			// request.onreadystatechange = function() {
+			// 	if (request.readyState === 4) {
+			// 		if (request.status === 200) {
+			// 			// document.body.className = 'ok';
+			// 			// console.log(request.responseText);
+			// 		} else {
+			// 			$("#modalFail").openModal();
+			// 			window.history.pushState("", document.title, "/login");
+			// 		}
+			// 	}
+			// };
+			// request.open("GET", url , true);
+			// request.send(null);
+
+			$('#send').click(function(){
+				$.ajax({
+					type: 'POST', 
+					url: '/logging_in', 
+					dataType: 'json',
+					data: $('#form_login').serialize(),
+					timeout: 5000,
+					success: function (data, status, jqXHR) {          
+						window.location.href = '/'; // $(location).attr('protocol') + $(location).attr('host')
+					},
+					beforeSend: function(){
+						$("#submit_text").html("Loading...");
+						$('#send').prop( "disabled", true);
+					},
+					error: function(xhr, textStatus, errorThrownx){
+						if (xhr.status === 401) {
+							$("#pInfo").html(xhr.responseText);
+							$("#modalFail").openModal();
+						}
+					},
+					complete : function() {
+						// window.history.pushState("", document.title, "/login");
+						$("#submit_text").html("Login");
+						$('#send').prop( "disabled", false);
+					}
+				});
+				return false;
+			});
+		});
+		
+	</script>
+{%- endblock %}
+
+{% block bodyAttr %} class="rainbow-background"{% endblock %}
+
+{%- block content %}
+	<div class="container">
+		<div class="row center-form" style="margin-top: 15%;">
+			<div class="col offset-m3 card-panel hoverable alpha-dark white-text login-form">
+				<form id="form_login" name="form_login" method="post" action="/logging_in">
+                    <div class="row">
+                        <div class="col s10">
+                            <h3 clas="valign">Login</h3>
+                        </div>
+                        <div class="col s2">
+                            <a href="/" class="waves-effect white waves btn-floating tooltipped right" data-tooltip="Batal">
+                                <i class="material-icons grey-text">close</i>
+                            </a>
+                        </div>
+                    </div>
+					<div class="row">
+						<div class="input-field col s12">
+							<i class="material-icons prefix">account_circle</i>
+							<input id="username" type="text" name="username" placeholder="Username" class="validate" autofocus>
+							<label for="username">Username</label>
+						</div>
+						<div class="input-field col s12">
+							<i class="material-icons prefix">lock</i>
+							<input id="password" type="password" name="password" placeholder="Password" class="validate">
+							<label for="password">Password</label>
+						</div>
+					</div>
+					<div class="left">
+						<a href="/register" class="waves-effect waves btn-flat tooltipped grey-text" data-tooltip="Belum memiliki akun?">Mendaftar</a>
+					</div>
+					<div class="right">
+						<button class="btn waves-effect waves-light white grey-text darken-3" id="send" type="submit" name="action">
+							<span id="submit_text">Login</span>
+							<i class="material-icons right grey-text darken-3">send</i>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modalFail" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="pInfo">{{ context.pInfo }}</p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+
+<!--<h1>Login</h1>
+<form action="/result" method="post">
+	Username: <input type="text" name="username"> <br>
+	Password: <input type="password" name="password"><br>
+	<input type="submit"><br>
+</form>-->
+<!--<section>
+	{%- for post in posts %}
+	<article>
+		<header>
+			<h1>{{ post.title }}</h1>
+			<span>Author: {{ post.username }}</span>
+		</header>
+		{{ post.content }}
+	</article>
+	{%- endfor %}
+</section>-->
+{%- endblock %}
