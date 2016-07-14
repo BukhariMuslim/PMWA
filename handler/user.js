@@ -2,6 +2,7 @@ var Warnet = require('../model/warnet'),
 	User = require('../model/user'),
 	Pc = require('../model/pc'),
 	Permission = require('../model/permission'),
+	fs = require('fs'),
 	handler;
 
 var index = function(req, res){
@@ -153,13 +154,67 @@ var registering = function (req, res) {
 	});
 }
 
+var profileImg = function (req, res) {
+	var userId = req.params.id,
+		dirname = "./public/user/img",
+		img;
+
+	var path = dirname + "/profile/prof" + userId + ".jpg"; 
+	
+	fs.readFile(path, function (err, content) {
+		if (err) {
+			fs.readFile(dirname + "/empty_profile.jpg", function (err, content) {
+				if (err) {
+					res.writeHead(400, {'Content-type':'text/html'})
+					console.log(err);
+					res.end("Gambar tidak ditemukan");    
+				} else {
+					res.writeHead(200,{'Content-type':'image/jpg'});
+					res.end(content);
+				}
+			});
+		} else {
+			res.writeHead(200,{'Content-type':'image/jpg'});
+			res.end(content);
+		}
+	});
+}
+
+var netImg = function (req, res) {
+	var userId = req.params.id,
+		dirname = "./public/user/img",
+		img;
+	
+	var path = dirname + "/net/net" + userId + ".jpg"; 
+	
+	fs.readFile(path, function (err, content) {
+		if (err) {
+			fs.readFile(dirname + "/empty_computer.jpg", function (err, content) {
+				if (err) {
+					res.writeHead(400, {'Content-type':'text/html'})
+					console.log(err);
+					res.end("Gambar tidak ditemukan");    
+				} else {
+					res.writeHead(200,{'Content-type':'image/jpg'});
+					res.end(content);
+				}
+			});
+		} else {
+			res.writeHead(200,{'Content-type':'image/jpg'});
+			res.end(content);
+		}
+	});
+}
+
 handler = {
 	index: index,
 	logging_in: logging_in,
 	login: login,
 	register: register,
 	registering: registering,
-	showWarnet : showWarnet
+	showWarnet : showWarnet,
+	profileImg : profileImg,
+	netImg : netImg
 };
 
 module.exports = handler;

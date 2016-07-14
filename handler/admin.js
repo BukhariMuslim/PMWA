@@ -3,6 +3,7 @@ var User = require('../model/user'),
 	Pc = require('../model/pc'),
 	Warnet = require('../model/warnet'),
 	Komentar = require('../model/komentar'),
+	fs = require('fs'),
 	handler;
 
 var index = function(req, res){
@@ -154,6 +155,9 @@ var editWarnet = function(req, res){
 
 var saveWarnet = function (req, res) {
 	var body = req.body,
+		dirname = "/public/user/img/temp",
+		file = req.file,
+		tmp_path,
 		target_path,
 		name = body.name,
 		kota = body.kota,

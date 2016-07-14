@@ -50,8 +50,12 @@ Tambah Warnet
             if (txtlatLng.value) {
                 lat = txtlatLng.value.substring(0, txtlatLng.value.indexOf(";"));
                 lng = txtlatLng.value.substring(txtlatLng.value.indexOf(";") + 1);
+                // lat = parseInt(lat);
+                // lng = parseInt(lng);
                 preSign = true;
             }
+
+           
 
             var mapOptions = {
                 center: new google.maps.LatLng(lat, lng),
