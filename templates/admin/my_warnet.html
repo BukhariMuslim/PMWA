@@ -1,0 +1,249 @@
+{% import "warnet.html" as warnetTmp %}
+{% import "quick_info.html" as infoTmp %}
+
+{% extends "base.html" %}
+
+{%- block title %}Warnet Saya{%- endblock %}
+
+{%- block head %}
+<script src="/vendor/js/nunjucks.min.js"></script>
+<script>
+    $(function(){
+        function init() {
+            window.addEventListener('scroll', function(e){
+                var distanceY = window.pageYOffset || document.documentElement.scrollTop,
+                    shrinkOn = 100;
+
+                if (distanceY > shrinkOn) {
+                    $("header:not(.smaller)").addClass("smaller");
+                    $("img.profile-img:not(.side-pic):not(.small-pic)").addClass("small-pic");
+                } else {
+                    $("header.smaller").removeClass("smaller");
+                    $("img.profile-img.small-pic:not(.side-pic)").removeClass("small-pic");
+                }
+            });
+
+            $("img.profile:not(.side-pic)").parent().parent().on({
+                mouseenter: function () {
+                    $("img.profile:not(.side-pic):not(z-depth-1)").addClass("z-depth-1");
+                },
+                mouseleave: function () {
+                    $("img.profile.z-depth-1:not(.side-pic)").removeClass("z-depth-1");
+                }
+            });
+        }
+        
+        window.onload = init();
+
+        $(".button-collapse").sideNav({
+                closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+            }
+        );
+                    
+        $('.dropdown-button').dropdown({
+                gutter: 0, // Spacing from edge
+                belowOrigin: true, // Displays dropdown below the button
+                alignment: 'left' // Displays dropdown with edge aligned to the left of button
+            }
+        );
+        
+        function check(input) {
+            if (input.value != document.getElementById('password').value) {
+                input.setCustomValidity('Password Must be Matching.');
+            } else {
+                // input is valid -- reset the error message
+                input.setCustomValidity('');
+                input.validity.valid = checkValidity();
+            }
+        }
+        
+        var par = getParameterByName("success");
+        if (par) {
+            if (par == "1" || par == "4" || par == "6") $("#modalSuccess").openModal();
+            else if (par == "2" || par == "3" || par == "5" || par == "7") $("#modalFail").openModal();
+            if (par == "6" || par == "7") window.history.pushState("", document.title, "<?=$prefix?>warnet?id=<?=$netId?>");
+            else window.history.pushState("", document.title, "<?=$prefix?>warnet");
+        }
+        
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function (e) {
+                    $('#inputImg').attr('src', e.target.result);
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        $("#uplImg").change(function(){
+            readURL(this);
+        });
+        
+        $("#uplImgBtn").click(function(){
+            $("#uplImg").click();
+        });
+        
+        $("#phone").keydown(function (e) {
+            // Allow: backspace, delete, tab, escape, enter and .
+            if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+                // Allow: Ctrl+A
+                (e.keyCode == 65 && e.ctrlKey === true) ||
+                // Allow: Ctrl+C
+                (e.keyCode == 67 && e.ctrlKey === true) ||
+                // Allow: Ctrl+X
+                (e.keyCode == 88 && e.ctrlKey === true) ||
+                // Allow: home, end, left, right
+                (e.keyCode >= 35 && e.keyCode <= 39)) {
+                    // let it happen, don't do anything
+                    return;
+            }
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+        
+        $(".detailW").hover(function() {
+            var c = $(this).children(this.children.length);
+            var s = $(this).siblings().children(this.children.length);
+            for (var i = 0; i < s.children().length; i++) {
+                var x = s.children(i);
+                if (x.hasClass("hide")) x.addClass("hide")
+            }
+            c.children().toggleClass("hide");
+            $(this).css( 'cursor', 'pointer' );
+            return false;
+        });
+
+        $(".detailW").click(function() {
+            var id = $(this).children().last().prop("id");
+            if (id.length > 1) id = id.replace("r", "");
+            if (id) window.location="/warnet/" + id; 
+        });
+        
+        $("#lihatPc").click(function(){
+            $("#modalPC").openModal();
+        });
+
+        $('#delete').click(function(e){
+            var hasil = confirm('Yakin ingin menghapus data ?');
+            if (hasil) {
+                var id = $(this).parent().attr('id').replace('r', '');
+                $.ajax({
+                    type:'DELETE',
+                    url:'/warnet/delete/' + id,
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                    beforeSend: function(){
+                        $('#delete').prop( "disabled", true);
+                    },
+                    success: function (data, status, jqXHR) {
+                        // var context = JSON.parse(jqXHR.responseText);
+                        // if (context.success) $("#pInfo").html(context.success);
+                        // else $("#pInfo").html("Simpan Warnet Berhasil");
+                        // $("#modalInfo").openModal();
+                        window.location.reload(true);
+                    },
+                    error: function(xhr, textStatus, errorThrownx){
+                        if (xhr.status === 409) {
+                            $("#pInfo").html(xhr.responseText);
+                            $("#modalInfo").openModal();
+                        }
+                    },
+                    complete : function() {
+                        $('#delete').prop( "disabled", false);
+                    }
+                });
+            }
+            
+            e.preventDefault();
+            return false;
+        });
+    });
+    
+</script>
+{%- endblock %}
+
+{% block bodyAttr %}id="main-page" class="blue-grey lighten-5"{% endblock %}
+
+{%- block content %}
+	{%- include "./nav_admin.html" ignore missing -%}
+	<main>
+		<div class="container">
+			<div class="card">
+                <div class="card-content">
+                    <div class="row">
+                        <div class="col s6">
+                            <a href="../warnet/new" class="waves-effect waves-light btn white-text tooltipped" data-tooltip="Tambah Warnet"><i class="material-icons">add</i></a>               
+                        </div>
+                        <div class="col s6 hide">
+                            <form name="form_cari_warnet" method="get" action="./warnet/search">
+                                <nav class="white" style="box-shadow: none">
+                                    <div class="input-field">
+                                        <input id="searchWarnet" name="cari" type="search" placeholder="Pencarian" class="black-text">
+                                        <label for="searchWarnet"><i class="material-icons black-text">search</i></label>
+                                        <i class="material-icons black-text">close</i>
+                                    </div>
+                                </nav>
+                            </form>               
+                        </div>
+                    </div>
+                    <table class="warnet-lst striped responsive-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px">No.</th>
+                                <th>Nama Warnet</th>
+                                <th>Kota</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% set no_urut = 1 %}
+                        {% for net in current_warnet %}
+                            <tr id="r{{ no_urut }}" class="detailW">
+                                <td>{{ no_urut }}</td>
+                                <td>{{ net.net_name }}</td>
+                                <td>{{ net.net_addr }}</td>
+                                <td id="r{{ net.net_id }}" style="text-align: right; padding-right: 5px">
+                                    <a href="./warnet/edit/{{ net.net_id }}" class="waves-effect waves-light btn white-text tooltipped hide" data-tooltip="Edit"><i class="material-icons">reorder</i></a>
+                                    <button id="delete" class="waves-effect waves-light btn white-text tooltipped hide" type="button" name="delete" data-tooltip="Hapus">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                    <!--<a href="./warnet/delete/{{ net.net_id }}" class="waves-effect waves-light btn white-text tooltipped hide" data-tooltip="Hapus" onclick="return confirm('Yakin ingin menghapus Warnet {{ current_warnet.net_name }} ?')"><i class="material-icons">delete</i></a>-->
+                                </td>
+                            </tr>
+                            {% set no_urut = no_urut + 1 %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="center-text">Tidak ada data untuk ditampilkan</td>
+                            </tr>
+                        {% endfor %}                        
+                        </tbody>
+                    </table>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+		</div>
+	</main>
+    
+    <div id="modalInfo" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="pInfo"></p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+{%- endblock %}
+
+{% block footer -%}
+	<footer class="page-footer teal lighten-2 main">
+		<div class="footer-copyright">
+			<div class="container">© 2016 Copyright Cari Warnet<div>
+		</div>
+	</footer>
+{%- endblock %}

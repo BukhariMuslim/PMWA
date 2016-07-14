@@ -41,6 +41,193 @@ var logout = function(req, res){
 	});
 };
 
+
+var showWarnet = function(req, res){
+	var netId = req.params.id,
+		username = req.session.user;
+
+	User
+		.where({ "mbr_username" : username })
+		.fetch()
+		.then(function(current_user){
+			current_user = current_user.toJSON();
+			Warnet.where({ "net_id" : netId })
+				.fetch()
+				.then(function (current_net) {
+					current_net = current_net.toJSON();
+					User.where({ "mbr_id" : current_net.net_owner })
+					.fetch()
+					.then(function(current_net_user) {
+						Pc.where({ 'pc_net_id' : netId })
+						.fetchAll()
+						.then(function(current_pc) {
+							if (current_pc.toJSON) {
+								current_pc = current_pc.toJSON();
+							}
+							res.render('./admin/add_net.html',{
+								current_user: current_user,
+								current_net: current_net,
+								current_pc: current_pc,
+								current_net_user: current_net_user.toJSON(),
+								isBelong: current_user.mbr_username == username,
+								isLogin: true
+							});
+						});
+					})
+					.catch(function(err){
+						console.log("Warnet user :" + err);
+						res.sendStatus(500);
+					});
+				})
+				.catch(function(err){
+					console.log("Warnet user :" + err);
+					res.sendStatus(500);
+				});
+		})
+		.catch(function(err){
+			console.log("Warnet user :" + err);
+			res.sendStatus(500);
+		});
+};
+
+var newWarnet = function(req, res){
+	var username = req.session.user;
+
+	User
+		.where({ "mbr_username" : username })
+		.fetch()
+		.then(function(current_user){
+			res.render('./admin/add_net.html',{
+				current_user: current_user.toJSON(),
+				isInsert: true 
+			});
+		})
+		.catch(function(err){
+			res.sendStatus(500);
+		});
+};
+
+var saveWarnet = function (req, res) {
+	var body = req.body,
+		target_path,
+		name = body.name,
+		kota = body.kota,
+		phone = body.phone,
+		alamat = body.alamat,
+		keterangan = body.keterangan,
+		latLng = body.latLng,
+		printer = body.printer,
+		game = body.game,
+		pulsa = body.pulsa,
+		ketik = body.ketik,
+		acc = body.acc,
+		otr = body.otr,
+		jlh = body.jlh,
+		err_msg = "Simpan Warnet Gagal.",
+		username = req.session.user,
+		current_user;
+
+	if (file) {
+		tmp_path = file.path;
+	}
+
+	if (!jlh) jlh = 0;
+
+	User
+		.where({ "mbr_username" : username })
+		.fetch()
+		.then(function(current_user){
+			current_user = current_user.toJSON();
+			if (name == '') {
+				return res.status(409).send(err_msg + " Nama warnet tidak boleh kosong");
+			}
+
+			new Warnet({
+				'net_owner': current_user.mbr_id,
+				'net_name': name,
+				'net_city': kota,
+				'net_map': latLng,
+				'net_addr': alamat,
+				'net_desc': keterangan,
+				'net_phone': phone,
+				'net_f_printer': !!printer,
+				'net_f_pulsa': !!pulsa,
+				'net_f_game': !!game,
+				'net_f_ketik': !!ketik,
+				'net_f_acc': !!acc,
+				'net_f_otr': !!otr,
+				'net_created': Date.now()
+			})
+			.save()
+			.then(function(post) {
+				post = post.toJSON();
+				var id = post.id;
+				target_path = __dirname + "/public/user/img/net/net" + id + ".jpg";
+				target_path = target_path.replace("\handler", "");
+				if (tmp_path) {
+					fs.rename(tmp_path, target_path, function (err) {
+						if (err) console.log(err);
+						fs.unlink(tmp_path, function (err) {
+							if (err) console.log(err);
+						})
+					})
+				}
+
+				for (var i = 0; i < jlh; i++) {
+					new Pc({
+						'pc_mbr_id': '',
+						'pc_net_id': id,
+						'pc_stat': true
+					}).save();
+				}
+
+				res.end(JSON.stringify({status: 200, success: "Warnet Berhasil disimpan"}))		
+			})
+			.catch(function(err){
+				fs.unlink(tmp_path, function (err) {
+					if (err) console.log(err);
+				})
+				res.status(409).send(err_msg + " " + err);
+			});
+		})
+		.catch(function(err){
+			console.log("Warnet user :" + err);
+			res.sendStatus(500);
+		});
+};
+
+var warnet = function(req, res){
+	var username = req.session.user;
+	User
+	.where({ "mbr_username" : username })
+	.fetch()
+	.then(function(current_user){
+		current_user = current_user.toJSON();
+		Warnet.where({ "net_owner" : current_user.mbr_id })
+		.fetchAll()
+		.then(function (current_warnet) {
+			res.render('./admin/my_warnet.html', {
+				current_user: current_user,
+				current_warnet: current_warnet.toJSON()
+			});
+		});
+	});
+};
+
+var deleteWarnet = function(req, res){
+	new Warnet()
+	.where({ "net_id" : req.params.id })
+	.destroy()
+	.then(function(model){
+		new Pc()
+		.where({ "pc_net_id" : req.params.id })
+		.destroy()
+		.then(function(model){
+			res.sendStatus(204);
+		});
+	});
+};
+
 var profile = function (req, res) {
 	var userId = req.params.id,
 		username = req.session.user;
@@ -150,12 +337,43 @@ var updateProfile = function (req, res) {
 	});
 }
 
+var profileImg = function (req, res) {
+	var userId = req.params.id,
+		dirname = "./public/user/img",
+		img;
+
+	var path = dirname + "/profile/prof" + userId + ".jpg"; 
+	
+	fs.readFile(path, function (err, content) {
+		if (err) {
+			fs.readFile(dirname + "/empty_profile.jpg", function (err, content) {
+				if (err) {
+					res.writeHead(400, {'Content-type':'text/html'})
+					console.log(err);
+					res.end("Gambar tidak ditemukan");    
+				} else {
+					res.writeHead(200,{'Content-type':'image/jpg'});
+					res.end(content);
+				}
+			});
+		} else {
+			res.writeHead(200,{'Content-type':'image/jpg'});
+			res.end(content);
+		}
+	});
+}
+
 handler = {
 	index : index,
 	logout: logout,
 	profile: profile,
 	editProfile: editProfile,
 	updateProfile: updateProfile,
+	warnet: warnet,
+	newWarnet: newWarnet,
+	showWarnet: showWarnet,
+	saveWarnet: saveWarnet,
+	deleteWarnet : deleteWarnet
 };
 
 module.exports = handler;

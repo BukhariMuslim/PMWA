@@ -1,0 +1,575 @@
+{% import "warnet.html" as warnetTmp %}
+{% import "quick_info.html" as infoTmp %}
+
+{% extends "base.html" %}
+
+{%- block title %}
+{% if isInsert %}
+Tambah Warnet
+{% elif isEdit %}
+{{ current_net.net_name }} - Ubah Warnet
+{% else %}
+{{ current_net.net_name }}
+{% endif %}
+{%- endblock %}
+
+{%- block head %}
+<script src="/vendor/js/nunjucks.min.js"></script>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSrKwSmZci9mhs0cMoLdT1Uhc7Qk7Pk0c"></script>
+<script>
+    $(function(){
+        var marker;
+        function init() {
+            window.addEventListener('scroll', function(e){
+                var distanceY = window.pageYOffset || document.documentElement.scrollTop,
+                    shrinkOn = 100;
+
+                if (distanceY > shrinkOn) {
+                    $("header:not(.smaller)").addClass("smaller");
+                    $("img.profile-img:not(.side-pic):not(.small-pic)").addClass("small-pic");
+                } else {
+                    $("header.smaller").removeClass("smaller");
+                    $("img.profile-img.small-pic:not(.side-pic)").removeClass("small-pic");
+                }
+            });
+
+            $("img.profile:not(.side-pic)").parent().parent().on({
+                mouseenter: function () {
+                    $("img.profile:not(.side-pic):not(z-depth-1)").addClass("z-depth-1");
+                },
+                mouseleave: function () {
+                    $("img.profile.z-depth-1:not(.side-pic)").removeClass("z-depth-1");
+                }
+            });
+            
+            var txtlatLng = document.getElementById("latLng"),
+                lat = 3.6422865,
+                lng = 98.6694935,
+                preSign;
+
+            if (txtlatLng.value) {
+                lat = txtlatLng.value.substring(0, txtlatLng.value.indexOf(";"));
+                lng = txtlatLng.value.substring(txtlatLng.value.indexOf(";") + 1);
+                preSign = true;
+            }
+
+            var mapOptions = {
+                center: new google.maps.LatLng(lat, lng),
+                zoom: 14,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            var infoWindow = new google.maps.InfoWindow();
+            var latlngbounds = new google.maps.LatLngBounds();
+            var map = new google.maps.Map(document.getElementById("map-container"), mapOptions);
+            var geocoder = geocoder = new google.maps.Geocoder();
+
+            if (preSign) {
+                if (marker == undefined){
+                    marker = new google.maps.Marker({
+                        position: mapOptions.center,
+                        map: map,
+                        animation: google.maps.Animation.DROP
+                    });
+                }
+                else{
+                    marker.setPosition(e.latLng);
+                }
+                preSign = false;
+            }
+
+            google.maps.event.addListener(map, 'click', function (e) {
+                var latlng = new google.maps.LatLng(e.latLng.lat(), e.latLng.lng());
+                var txtAddr = document.getElementById("alamat");
+
+                geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        if (results[1]) {
+                            var adr = results[1].formatted_address;
+                            txtlatLng.value = e.latLng.lat() + ";" + e.latLng.lng();
+                            if (!txtAddr.value) {
+                                txtAddr.value = adr;
+                            }
+
+                            infoWindow.setContent(adr);
+                            infoWindow.open(map, marker);
+                        }
+                    }
+                });
+
+                if (marker == undefined){
+                    marker = new google.maps.Marker({
+                        position: e.latLng,
+                        map: map,
+                        animation: google.maps.Animation.DROP
+                    });
+
+                    marker.addListener('click', function() {
+                        infoWindow.setContent(txtAddr.value);
+                        infoWindow.open(map, this);
+                    });
+                }
+                else{
+                    marker.setPosition(e.latLng);
+                }
+                map.setCenter(e.latLng);
+            });
+        }
+        
+        window.onload = init();
+        
+        $(".button-collapse").sideNav({
+                closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+            }
+        );
+                    
+        $('.dropdown-button').dropdown({
+                gutter: 0, // Spacing from edge
+                belowOrigin: true, // Displays dropdown below the button
+                alignment: 'left' // Displays dropdown with edge aligned to the left of button
+            }
+        );
+        
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function (e) {
+                    $('#inputImg').attr('src', e.target.result);
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        $("#uplImg").change(function(){
+            readURL(this);
+        });
+        
+        $("#uplImgBtn").click(function(){
+            $("#uplImg").click();
+        });
+        
+        $("#phone").keydown(function (e) {
+            // Allow: backspace, delete, tab, escape, enter and .
+            if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+                // Allow: Ctrl+A
+                (e.keyCode == 65 && e.ctrlKey === true) ||
+                // Allow: Ctrl+C
+                (e.keyCode == 67 && e.ctrlKey === true) ||
+                // Allow: Ctrl+X
+                (e.keyCode == 88 && e.ctrlKey === true) ||
+                // Allow: home, end, left, right
+                (e.keyCode >= 35 && e.keyCode <= 39)) {
+                    // let it happen, don't do anything
+                    return;
+            }
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+        
+        $("#lihatPc").click(function(){
+            $("#modalPC").openModal();
+        });
+
+        if (nunjucks.renderString("{{ isEdit }}")) {
+            $('#form_net').submit(function(e){
+                var formData = new FormData($(this)[0]),
+                    id = $("#id").val();
+                console.log($("#uplImg")[0].files[0]);
+                console.log(formData);
+                $.ajax({
+                    type:'PUT',
+                    url:'/warnet/updateWarnet',
+                    data : formData,
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                    beforeSend: function(){
+                        $('#send').prop( "disabled", true);
+                    },
+                    success: function (data, status, jqXHR) {
+                        var context = JSON.parse(jqXHR.responseText);
+                        if (context.success) $("#pInfo").html(context.success);
+                        else $("#pInfo").html("Update Warnet Berhasil");
+                        $("#modalInfo").openModal();
+                        window.location.replace("/warnet/" + id);
+                    },
+                    error: function(xhr, textStatus, errorThrownx){
+                        if (xhr.status === 409) {
+                            $("#pInfo").html(xhr.responseText);
+                            $("#modalInfo").openModal();
+                        }
+                    },
+                    complete : function() {
+                        $('#send').prop( "disabled", false);
+                    }
+                })
+                
+                e.preventDefault();
+            });
+        }
+        else {
+            $('#form_net').submit(function(e){
+                var formData = new FormData($(this)[0]);
+                console.log($("#uplImg")[0].files[0]);
+                console.log(formData);
+                $.ajax({
+                    type:'POST',
+                    url:'/warnet/saveWarnet',
+                    data : formData,
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                    beforeSend: function(){
+                        $('#send').prop( "disabled", true);
+                    },
+                    success: function (data, status, jqXHR) {
+                        var context = JSON.parse(jqXHR.responseText);
+                        if (context.success) $("#pInfo").html(context.success);
+                        else $("#pInfo").html("Simpan Warnet Berhasil");
+                        $("#modalInfo").openModal();
+                        $(':input').val('');
+                        if (marker) {
+                            marker.setMap(null);
+                        }
+                        $('#inputImg').attr('src', '/net_img/0');
+                    },
+                    error: function(xhr, textStatus, errorThrownx){
+                        if (xhr.status === 409) {
+                            $("#pInfo").html(xhr.responseText);
+                            $("#modalInfo").openModal();
+                        }
+                    },
+                    complete : function() {
+                        $('#send').prop( "disabled", false);
+                    }
+                })
+                
+                e.preventDefault();
+            });
+        }
+    });
+</script>
+{%- endblock %}
+
+{% block bodyAttr %}id="main-page" class="blue-grey lighten-5"{% endblock %}
+
+{%- block content %}
+	{%- include "./nav_admin.html" ignore missing -%}
+	<main>
+		<div class="container">
+			<form id="form_net" name="form_net" enctype="multipart/form-data">
+				<div class="row">
+                    <div class="col s12 m8 push-m4 l9 push-l3">
+                        <div class="row">
+                            <div class="col m3">
+                                <div class="card">
+                                    <div class="card-image">
+                                        <img id="inputImg" src="/net_img/{{ current_net.net_id if current_net.net_id else 0 }}" width="100%" alt="">
+                                    </div>
+                                    <div class="card-content{{ "" if isEdi or isInsert else " hide" }}">
+                                        <div class="file-field input-field tooltipped" data-tooltip="Upload Gambar Profile">
+                                            <div class="btn">
+                                                <span><i id="uplImgBtn" class="material-icons">system_update_alt</i></span>
+                                                <input type="hidden" name="MAX_FILE_SIZE" value="99999999" />
+                                                <input type="file" name="gambar" id="uplImg" accept="image/jpeg">
+                                            </div>
+                                            <div class="file-path-wrapper">
+                                                <input class="file-path validate" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col m9 s12">
+                                <div class="row">
+                                    <div class="col s12">
+                                        <div class="input-field col s12" style="padding-left: 0;">
+                                            <input id="id" type="hidden" name="id" value="{{ current_net.net_id }}">
+                                            <input id="name" type="text" name="name" placeholder="Nama Warnet" value="{{ current_net.net_name }}" class="validate h3" {{ "" if isEdit or isInsert else "disabled" }} autofocus tabindex="1">
+                                        </div>
+                                    </div>
+                                    <div class="col s12">
+                                        <span class="star-rating right" style="margin-left: 15px">
+                                            <input type="radio" name="rating" value="1" checked disabled><i></i>
+                                            <input type="radio" name="rating" value="2" disabled><i></i>
+                                            <input type="radio" name="rating" value="3" disabled><i></i>
+                                            <input type="radio" name="rating" value="4" disabled><i></i>
+                                            <input type="radio" name="rating" value="5" disabled><i></i>
+                                        </span>
+                                        <div class="right{{ "" if not (isEdit or isInsert) else " hide" }}">
+                                            <button class="waves-effect waves-light btn white-text tooltipped" type="button" name="lihatPc" id="lihatPc" data-tooltip="Lihat PC" tabindex="6" style="margin-left: 5px">
+                                                <i class="material-icons">computer</i>
+                                            </button>
+                                        </div>
+                                        <div class="right{{ "" if (not isEdit) and isBelong and (not isInsert) else " hide" }}">
+                                            <a href="/warnet/edit/{{ current_net.net_id }}" class="waves-effect waves-light btn white-text valign right tooltipped" data-tooltip="Edit" tabindex="1"><i class="material-icons">toc</i></a>
+                                        </div>
+                                        <div class="right{{ "" if isEdit or isInsert else " hide" }}">
+                                            <button id="send" class="waves-effect waves-light btn white-text tooltipped right" type="submit" name="simpan" data-tooltip="Simpan" style="margin-left: 5px" tabindex="7">
+                                                <i class="material-icons">done</i>
+                                            </button>
+                                            <a href="/warnet/{{ current_net.net_id }}" class="waves-effect waves-light btn white-text tooltipped right" data-tooltip="Batal" tabindex="8"><i class="material-icons">cancel</i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="card">
+							<div class="card-content">
+                                <div class="row">
+                                    <div class="col m12">
+                                        <small class="grey-text text-lighten-1">- Dipublikasikan oleh : {{ current_user.mbr_name if isInsert else current_net_user.mbr_name }}</small>
+                                    </div>
+                                </div>
+								<div class="row">
+									<div class="input-field col m6">
+										<input id="kota" name="kota" placeholder="Kota" type="text" class="validate" value="{{ current_net.net_city }}" {{ "" if isEdit or isInsert else "disabled" }} tabindex="2">
+										<label for="kota">Kota</label>
+									</div>
+									<div class="input-field col m6">
+										<input id="phone" name="phone" placeholder="Telepon" type="text" class="validate" value="{{ current_net.net_phone }}" {{ "" if isEdit or isInsert else "disabled" }} tabindex="5">
+										<label for="phone">Telepon</label>
+									</div>
+                                    <div class="input-field col m12">
+										<input id="alamat" name="alamat" placeholder="Alamat" type="text" class="validate" value="{{ current_net.net_addr }}" {{ "" if isEdit or isInsert else "disabled" }} tabindex="6">
+										<label for="alamat">Alamat</label>
+									</div>
+                                    <div class="input-field col m12">
+										<input id="keterangan" name="keterangan" placeholder="Keterangan" type="text" class="validate" value="{{ current_net.net_desc }}" {{ "" if isEdit or isInsert else "disabled" }} tabindex="6">
+										<label for="keterangan">Keterangan</label>
+									</div>
+                                    <div class="input-field col m4{{ "" if isEdit or isInsert else " hide" }}">
+										<input id="jlh" name="jlh" placeholder="jlh" type="number" class="validate" value="{{ current_pc | length }}" tabindex="6">
+										<label for="jlh">Jumlah PC</label>
+									</div>
+                                    <div class="clearfix"></div>
+                                    <input id="latLng" type="hidden" name="latLng" value="{{ current_net.net_map }}">
+                                    <div id="map-container" class="col-m6" style="height: 400px"></div>
+                                    <div class="clearfix"></div>
+								</div>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h4>Fasilitas</h4>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <div class="table">
+                                        <table class="striped responsive-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nama Fasilitas</th>
+                                                    <th>Ketersediaan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Printer & Scanner</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="printer" value="printer" {{ "checked=\"checked\"" if current_net.net_f_printer else "" }} {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Voucher Pulsa</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="pulsa" value="pulsa" {{ "checked=\"checked\"" if current_net.net_f_pulsa else "" }} {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Voucher Game</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="game" value="game" {{ "checked=\"checked\"" if current_net.net_f_game else "" }}  {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Jasa Pengetikan / Terjemahan</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="ketik" value="ketik" {{ "checked=\"checked\"" if current_net.net_f_ketik else "" }} {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Aksesoris Gadget & Komputer</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="acc" value="acc" {{ "checked=\"checked\"" if current_net.net_f_acc else "" }} {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lainnya</td>
+                                                    <td>
+                                                        <div class="switch">
+                                                            <label>
+                                                                <input type="checkbox" name="otr" value="otr" {{ "checked=\"checked\"" if current_net.net_f_otr else "" }} {{ "" if isEdit or isInsert else "disabled" }}>
+                                                                <span class="lever"></span>
+                                                                Tersedia
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+							</div>
+						</div>
+					</div>
+					<div class="col s12 m4 pull-m8 l3 pull-l9">
+                        <!--{{ infoTmp.info_panel(net_new, net_top) }}-->
+                    </div>
+				</div>
+			</form>
+            <div class="card">
+                <div class="card-content">
+                    <div class="row">
+                        <div class="col s12">
+                            <h4>
+                                Komentar
+                                <small></small>
+                            </h4>
+                        </div>
+                    </div>                    
+                    <div class="row">
+                        <div class="col s12">
+                            <ul class="collection">
+                                {% for cmt in current_comment %}
+                                <li class="collection-item avatar">
+                                    <img src="/profile_img/{{ cmt.user.mbr_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
+                                    <span class="title">
+                                        <a href="/profile/{{ cmt.user.mbr_id }}">
+                                            {{ cmt.user.mbr_name }}
+                                        </a>
+                                    </span>
+                                    <p>{{ cmt.com_desc }}</p>
+                                    <span class="secondary-content">
+                                        <span class="star-rating">
+                                            <input type="radio" name="rating[]" value="1" {{ "checked=\"true\"" if cmt.com_rate == 1 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating[]" value="2" {{ "checked=\"true\"" if cmt.com_rate == 2 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating[]" value="3" {{ "checked=\"true\"" if cmt.com_rate == 3 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating[]" value="4" {{ "checked=\"true\"" if cmt.com_rate == 4 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating[]" value="5" {{ "checked=\"true\"" if cmt.com_rate == 5 else "" }} disabled="true"><i></i>
+                                        </span>
+                                        {{ cmt.com_dt | date("d M Y H:i:s") }}
+                                        </span>
+                                </li>
+                                {% else %}
+                                <li>
+                                    <div class="collapsible-header active">
+                                        Belum ada Komentar.
+                                        </div>
+                                    <div class="collapsible-body">
+                                        <p>Silahkan berikan komentar Anda melalui field yang tersedia.</p>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>               
+                        </div>
+                        {% if isLogin %}
+                        <div class="col s12">
+                            <form name="form_komentar" method="post" action="/admin/add_post">
+                                <div class="input-field col m6">
+                                    <input id="netId" name="netId" type="hidden" value="{{ current_user.mbr_id }}">
+                                    <input id="userK" name="userK" type="text" placeholder="Name" value="{{ current_user.mbr_name }}" disabled>
+                                    <label for="userK">Anda berkomentar sebagai :</label>
+                                </div>
+                                <div class="col m6">
+                                    <label style="display: inline-block; height:30px; margin-right:5px;">Rate</label>
+                                    <span class="star-rating">
+                                        <input type="radio" name="rating" value="1" checked><i></i>
+                                        <input type="radio" name="rating" value="2" ><i></i>
+                                        <input type="radio" name="rating" value="3" ><i></i>
+                                        <input type="radio" name="rating" value="4" ><i></i>
+                                        <input type="radio" name="rating" value="5" ><i></i>
+                                    </span>
+                                </div>
+                                <div class="input-field col m12">
+                                    <textarea id="komentar" name="komentar" placeholder="Komentar" class="materialize-textarea" length="200" tabindex="12"></textarea>
+                                    <label for="komentar">Komentar</label>
+                                </div>
+                                <div class="col m12">
+                                    <button class="btn waves-effect waves-light white-text right tooltipped" type="submit" name="post" data-tooltip="Post" tabindex="5">Post
+                                        <i class="material-icons right">send</i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}                
+                    </div>
+                </div>
+            </div>
+		</div>
+	</main>
+    
+    <div id="modalInfo" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="pInfo"></p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+
+    <div id="modalPC" class="modal">
+		<div class="modal-content">
+			<h4>Daftar PC {{ current_net.net_name }}</h4>
+			<div class="row">
+                {% set countPC = 1 %}
+                {% for pc in current_pc %}
+                <div class="col m3">
+                    <button class="waves-effect waves-light btn white-text {{ "" if current_pc.pc_stat else "red" }} type="submit" name="simpan" data-tooltip="Simpan" tabindex="7" style="margin-left: 5px; margin-bottom: 10px; width: 100%; height: 80px;">
+                        PC {{ countPC }}
+                        <i class="material-icons" style="display: block">computer</i>
+                    </button>
+                </div>
+                {% set countPC = countPC + 1 %}
+                {% else %}
+                <div class="valign-wrapper">
+                    <div class="valign">Tidak Ada PC</div>
+                </div>
+                {% endfor %}
+            </div>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+{%- endblock %}
+
+{% block footer -%}
+	<footer class="page-footer teal lighten-2 main">
+		<div class="footer-copyright">
+			<div class="container">© 2016 Copyright Cari Warnet<div>
+		</div>
+	</footer>
+{%- endblock %}
