@@ -23,8 +23,6 @@ router = function(app){
 	r.put('/warnet/updateWarnet', upload.single('gambar'), auth.user, h.updateWarnet);
 	r.delete('/warnet/delete/:id', auth.user, h.deleteWarnet);
 	r.get('/warnet/:id', auth.net, h.showWarnet);
-	r.post('/admin/addUser', auth.user, h.addUser);
-	r.post('/admin/addPost', auth.user, h.addPost);
 	r.get('/admin/logout', auth.user, h.logout);
 	app.use(r);
 };
