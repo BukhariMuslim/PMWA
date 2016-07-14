@@ -1,0 +1,313 @@
+{% import "warnet.html" as warnetTmp %}
+{% import "quick_info.html" as infoTmp %}
+
+{% extends "base.html" %}
+
+{%- block title %}Profile - {{ current_user.mbr_name }}{%- endblock %}
+
+{%- block head %}
+<script>
+		$(function(){
+			function init() {
+				window.addEventListener('scroll', function(e){
+					var distanceY = window.pageYOffset || document.documentElement.scrollTop,
+						shrinkOn = 100;
+
+					if (distanceY > shrinkOn) {
+						$("header:not(.smaller)").addClass("smaller");
+						$("img.profile-img:not(.side-pic):not(.small-pic)").addClass("small-pic");
+					} else {
+						$("header.smaller").removeClass("smaller");
+						$("img.profile-img.small-pic:not(.side-pic)").removeClass("small-pic");
+					}
+				});
+
+				$("img.profile:not(.side-pic)").parent().parent().on({
+					mouseenter: function () {
+						$("img.profile:not(.side-pic):not(z-depth-1)").addClass("z-depth-1");
+					},
+					mouseleave: function () {
+						$("img.profile.z-depth-1:not(.side-pic)").removeClass("z-depth-1");
+					}
+				});
+			}
+			
+			window.onload = init();
+
+			$(".button-collapse").sideNav({
+					closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+				}
+			);
+						
+			$('.dropdown-button').dropdown({
+					gutter: 0, // Spacing from edge
+					belowOrigin: true, // Displays dropdown below the button
+					alignment: 'left' // Displays dropdown with edge aligned to the left of button
+				}
+			);
+			
+			function check(input) {
+				if (input.value != document.getElementById('password').value) {
+					input.setCustomValidity('Password Must be Matching.');
+				} else {
+					// input is valid -- reset the error message
+					input.setCustomValidity('');
+					input.validity.valid = checkValidity();
+				}
+			}
+			
+            var par = getParameterByName("success");
+            if (par) {
+                if (par == "1" || par == "4" || par == "6") $("#modalSuccess").openModal();
+                else if (par == "2" || par == "3" || par == "5" || par == "7") $("#modalFail").openModal();
+                if (par == "6" || par == "7") window.history.pushState("", document.title, "<?=$prefix?>warnet?id=<?=$netId?>");
+                else window.history.pushState("", document.title, "<?=$prefix?>warnet");
+            }
+            
+            function readURL(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    
+                    reader.onload = function (e) {
+                        $('#inputImg').attr('src', e.target.result);
+                    }
+                    
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+            
+            $("#uplImg").change(function(){
+                readURL(this);
+            });
+            
+            $("#uplImgBtn").click(function(){
+                $("#uplImg").click();
+            });
+            
+            $("#phone").keydown(function (e) {
+                // Allow: backspace, delete, tab, escape, enter and .
+                if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+                    // Allow: Ctrl+A
+                    (e.keyCode == 65 && e.ctrlKey === true) ||
+                    // Allow: Ctrl+C
+                    (e.keyCode == 67 && e.ctrlKey === true) ||
+                    // Allow: Ctrl+X
+                    (e.keyCode == 88 && e.ctrlKey === true) ||
+                    // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                        // let it happen, don't do anything
+                        return;
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+            
+            $(".detailW").hover(function() {
+                var c = $(this).children(this.children.length);
+                var s = $(this).siblings().children(this.children.length);
+                for (var i = 0; i < s.children().length; i++) {
+                    var x = s.children(i);
+                    if (x.hasClass("hide")) x.addClass("hide")
+                }
+                c.children().toggleClass("hide");
+                $(this).css( 'cursor', 'pointer' );
+                return false;
+            });
+
+            $(".detailW").click(function() {
+                var id = $(this).prop("id");
+                if (id.length > 1) id = id.substr(1);
+                if (id) window.location="<?=$prefix?>warnet?id=" + id; 
+            });
+            
+            $("#lihatPc").click(function(){
+                $("#modalPC").openModal();
+            });
+
+            $('#form_profile').submit(function(e){
+                var formData = new FormData($(this)[0]);
+                // formData.append('gambar', $("#uplImg")[0].files[0]);
+                console.log($("#uplImg")[0].files[0]);
+                console.log(formData);
+                $.ajax({
+                    type:'PUT',
+                    url:'/profile/updateProfile',
+                    data : formData,
+                    // dataType: 'json',
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                    beforeSend: function(){
+						$('#send').prop( "disabled", true);
+					},
+                    success: function (data, status, jqXHR) {
+                        var context = JSON.parse(jqXHR.responseText);
+                        if (context.success) $("#pInfo").html(context.success);
+                        else $("#pInfo").html("Update Profil Berhasil");
+                        $("#modalInfo").openModal();
+						// $(':input').val('');
+					},
+					error: function(xhr, textStatus, errorThrownx){
+                        console.log(textStatus);                        
+                        console.log(errorThrownx);                        
+                        console.log(xhr);                        
+						if (xhr.status === 409) {
+							$("#pInfo").html(xhr.responseText);
+							$("#modalInfo").openModal();
+						}
+					},
+					complete : function() {
+						// window.history.pushState("", document.title, "/login");
+						$('#send').prop( "disabled", false);
+					}
+                })
+               
+                e.preventDefault();
+			});
+
+			$('#date').pickadate({
+				selectMonths: true, // Creates a dropdown to control month
+				selectYears: 15 // Creates a dropdown of 15 years to control year
+				,onSet: function( arg ){
+					console.log(arg);
+					if ( 'select' in arg ){ //prevent closing on selecting month/year
+						this.close();
+					}
+				}
+			});
+		});
+
+        function mask(o, f) {
+            setTimeout(function () {
+                var v = mphone(o.value);
+                if (v != o.value) {
+                    o.value = v;
+                }
+            }, 1);
+        }
+
+        function mphone(v) {
+            var r = v.replace(/\D/g,"");
+            r = r.replace(/^0/,"");
+            if (r.length > 10) {
+                // 11+ digits. Format as 5+4.
+                r = r.replace(/^(\d{4})(\d{4})(\d{4}).*/,"$1 $2 $3");
+            }
+            else if (r.length > 5) {
+                // 6..10 digits. Format as 4+4
+                r = r.replace(/^(\d{3})(\d{,4})(\d{0,4}).*/,"($1) $2 $3");
+            }
+            else if (r.length > 2) {
+                // 3..5 digits. Add (0XX..)
+                r = r.replace(/^(\d{3})(\d{0,5})/,"($1) $2");
+            }
+            else {
+                // 0..2 digits. Just add (0XX
+                if (r !== "") r = r.replace(/^(\d*)/, "($1");
+            }
+            return r;
+        }
+		
+	</script>
+{%- endblock %}
+
+{% block bodyAttr %}id="main-page" class="blue-grey lighten-5"{% endblock %}
+
+{%- block content %}
+	{%- include "./nav_admin.html" ignore missing -%}
+	<main>
+		<div class="container">
+			<form id="form_profile" name="form_profile" enctype="multipart/form-data">
+				<div class="row">
+                    <div class="col s12 m8 push-m4 l9 push-l3">
+                        <div class="row">
+                            <div class="col m3">
+                                <div class="card">
+                                    <div class="card-image">
+                                        <img id="inputImg" src="/profile_img/{{ current_user.mbr_id }}" width="100%" alt="">
+                                    </div>
+                                    <div class="card-content{{ "" if isEdit else " hide" }}">
+                                        <div class="file-field input-field tooltipped" data-tooltip="Upload Gambar Profile">
+                                            <div class="btn">
+                                                <span><i id="uplImgBtn" class="material-icons">system_update_alt</i></span>
+                                                <input type="hidden" name="MAX_FILE_SIZE" value="99999999" />
+                                                <input type="file" name="gambar" id="uplImg" accept="image/jpeg">
+                                            </div>
+                                            <div class="file-path-wrapper">
+                                                <input class="file-path validate" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col m9 s12">
+                                <div class="row">
+                                    <div class="col s12">
+                                        <div class="input-field col s12" style="padding-left: 0;">
+                                            <input id="id" type="hidden" name="id" value="{{ current_user.mbr_id }}">
+                                            <input id="name" type="text" name="name" placeholder="Nama" value="{{ current_user.mbr_name }}" class="validate h3" autofocus {{ "" if isEdit else "disabled" }} tabindex="1">
+                                        </div>
+                                    </div>
+                                    <div class="col s12 right{{ "" if (not isEdit) and isBelong else " hide" }}">
+                                        <a href="/profile/edit/{{ current_user.mbr_id }}" class="waves-effect waves-light btn white-text valign right tooltipped" data-tooltip="Edit" tabindex="1"><i class="material-icons">toc</i></a>
+                                    </div>
+                                    <div class="{{ "" if isEdit else " hide" }}">
+                                        <button id="send" class="waves-effect waves-light btn white-text tooltipped right" type="submit" name="simpan" data-tooltip="Simpan" style="margin-left: 5px" tabindex="7">
+                                            <i class="material-icons">done</i>
+                                        </button>
+                                        <a href="/profile/{{ current_user.mbr_id }}" class="waves-effect waves-light btn white-text tooltipped right" data-tooltip="Batal" tabindex="8"><i class="material-icons">cancel</i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="card">
+							<div class="card-content">
+								<div class="row">
+									<div class="input-field col m6 s12">
+										<input id="born" name="tempatLahir" placeholder="Tempat Lahir" type="text" class="validate" value="{{ current_user.mbr_tempat_lahir }}" {{ "" if isEdit else "disabled" }} tabindex="2">
+										<label for="born">Tempat Lahir</label>
+									</div>
+									<div class="col m6 s12 left-align">
+										<label for="date">Tanggal Lahir</label>
+										<input id="date" type="date" name="dateLahir" class="datepicker" style="height: 2.5rem !important" value="{{ current_user.mbr_tgl_lhr }}" required {{ "" if isEdit else "disabled" }} tabindex="3">
+									</div>
+									<div class="input-field col m6 s12">
+										<input id="email" name="email" placeholder="E-mail" type="email" class="validate" value="{{ current_user.mbr_email }}" required {{ "" if isEdit else "disabled" }} tabindex="4">
+										<label for="email">E-mail</label>
+									</div>
+									<div class="input-field col m6 s12">
+										<input id="phone" name="phone" placeholder="Telepon" type="text" class="validate" value="{{ current_user.mbr_phone }}" onblur="mask(this, mphone)" onkeypress="mask(this, mphone)" {{ "" if isEdit else "disabled" }} tabindex="5">
+										<label for="phone">Telepon</label>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col s12 m4 pull-m8 l3 pull-l9">
+                        {{ infoTmp.info_milik(current_warnet, current_user) }}
+                    </div>
+				</div>
+			</form>
+		</div>
+	</main>
+    
+    <div id="modalInfo" class="modal">
+		<div class="modal-content">
+			<h4>Pemberitahuan</h4>
+			<p id="pInfo"></p>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+		</div>
+	</div>
+{%- endblock %}
+
+{% block footer -%}
+	<footer class="page-footer teal lighten-2 main">
+		<div class="footer-copyright">
+			<div class="container">© 2016 Copyright Cari Warnet<div>
+		</div>
+	</footer>
+{%- endblock %}
