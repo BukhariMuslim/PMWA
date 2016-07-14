@@ -1,11 +1,24 @@
 #PMWA
 Aplikasi Pencarian Warnet menggunakan API Google Maps.
 
-
 ##Install
 ```javascript
 npm install
 ```
+
+##User
+```javascript
+{
+    username : admin
+    password : admin
+}
+
+{
+    username : user1
+    password : user1
+}
+```
+
 
 ##Contributors
 - Jay Clarens (13 111 3824)
