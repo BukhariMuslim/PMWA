@@ -21,6 +21,7 @@ router = function(app){
 	r.get('/warnet/edit/:id', auth.user, h.editWarnet);
 	r.post('/warnet/saveWarnet', upload.single('gambar'), auth.user, h.saveWarnet);
 	r.put('/warnet/updateWarnet', upload.single('gambar'), auth.user, h.updateWarnet);
+	r.post('/postComment', auth.user, h.saveKomentar);
 	r.delete('/warnet/delete/:id', auth.user, h.deleteWarnet);
 	r.get('/warnet/:id', auth.net, h.showWarnet);
 	r.get('/admin/logout', auth.user, h.logout);

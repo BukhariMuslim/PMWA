@@ -255,6 +255,40 @@ Tambah Warnet
                 e.preventDefault();
             });
         }
+
+        $('#form_komentar').submit(function(e){
+            console.log(this);
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                type:'POST',
+                url:'/postComment',
+                data : formData,
+                contentType: false,
+                processData: false,
+                cache: false,
+                // beforeSend: function(){
+                //     $('#send').prop( "disabled", true);
+                // },
+                success: function (data, status, jqXHR) {
+                    var context = JSON.parse(jqXHR.responseText);
+                    if (context.success) $("#pInfo").html(context.success);
+                    else $("#pInfo").html("Simpan Warnet Berhasil");
+                    $("#modalInfo").openModal();
+                    $('#form_komentar :input').val('');
+                },
+                error: function(xhr, textStatus, errorThrownx){
+                    if (xhr.status === 409) {
+                        $("#pInfo").html(xhr.responseText);
+                        $("#modalInfo").openModal();
+                    }
+                },
+                // complete : function() {
+                //     $('#send').prop( "disabled", false);
+                // }
+            })
+            
+            e.preventDefault();
+        });
     });
 </script>
 {%- endblock %}
@@ -468,10 +502,10 @@ Tambah Warnet
                             <ul class="collection">
                                 {% for cmt in current_comment %}
                                 <li class="collection-item avatar">
-                                    <img src="/profile_img/{{ cmt.user.mbr_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
+                                    <img src="/profile_img/{{ cmt,com_user_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
                                     <span class="title">
-                                        <a href="/profile/{{ cmt.user.mbr_id }}">
-                                            {{ cmt.user.mbr_name }}
+                                        <a href="/profile/{{ cmt.com_user_id }}">
+                                            {{ cmt.com_user_nm }}
                                         </a>
                                     </span>
                                     <p>{{ cmt.com_desc }}</p>
@@ -500,7 +534,7 @@ Tambah Warnet
                         </div>
                         {% if isLogin %}
                         <div class="col s12">
-                            <form name="form_komentar" method="post" action="/admin/add_post">
+                            <form id="form_komentar" name="form_komentar" enctype="multipart/form-data">
                                 <div class="input-field col m6">
                                     <input id="netId" name="netId" type="hidden" value="{{ current_user.mbr_id }}">
                                     <input id="userK" name="userK" type="text" placeholder="Name" value="{{ current_user.mbr_name }}" disabled>
@@ -509,11 +543,11 @@ Tambah Warnet
                                 <div class="col m6">
                                     <label style="display: inline-block; height:30px; margin-right:5px;">Rate</label>
                                     <span class="star-rating">
-                                        <input type="radio" name="rating" value="1" checked><i></i>
-                                        <input type="radio" name="rating" value="2" ><i></i>
-                                        <input type="radio" name="rating" value="3" ><i></i>
-                                        <input type="radio" name="rating" value="4" ><i></i>
-                                        <input type="radio" name="rating" value="5" ><i></i>
+                                        <input type="radio" name="ratingPost[]" value="1" checked><i></i>
+                                        <input type="radio" name="ratingPost[]" value="2" ><i></i>
+                                        <input type="radio" name="ratingPost[]" value="3" ><i></i>
+                                        <input type="radio" name="ratingPost[]" value="4" ><i></i>
+                                        <input type="radio" name="ratingPost[]" value="5" ><i></i>
                                     </span>
                                 </div>
                                 <div class="input-field col m12">

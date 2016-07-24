@@ -55,23 +55,37 @@ var showWarnet = function(req, res){
 			Warnet.where({ "net_id" : netId })
 				.fetch()
 				.then(function (current_net) {
-					current_net = current_net.toJSON();
+					if (current_net.toJSON) {
+						current_net = current_net.toJSON();
+					}
 					User.where({ "mbr_id" : current_net.net_owner })
 					.fetch()
 					.then(function(current_net_user) {
+						if (current_net_user.toJSON) {
+							current_net_user = current_net_user.toJSON();
+						}
 						Pc.where({ 'pc_net_id' : netId })
 						.fetchAll()
 						.then(function(current_pc) {
 							if (current_pc.toJSON) {
 								current_pc = current_pc.toJSON();
 							}
-							res.render('./admin/add_net.html',{
-								current_user: current_user,
-								current_net: current_net,
-								current_pc: current_pc,
-								current_net_user: current_net_user.toJSON(),
-								isBelong: current_user.mbr_username == username,
-								isLogin: true
+							Komentar
+							.where({ "com_net_id" : netId })
+							.fetchAll()
+							.then(function(current_comment) {
+								if (current_comment.toJSON) {
+									current_comment = current_comment.toJSON();
+								}
+								res.render('./admin/add_net.html',{
+									current_user: current_user,
+									current_net: current_net,
+									current_pc: current_pc,
+									current_comment: current_comment,
+									current_net_user: current_net_user,
+									isBelong: current_user.mbr_username == username,
+									isLogin: true
+								});	
 							});
 						});
 					})
@@ -324,6 +338,32 @@ var updateWarnet = function (req, res) {
 	});
 };
 
+var saveKomentar = function(req, res){
+	var username = req.session.user,
+		body = req.body,
+		rating = body.ratingPost,
+		komentar = body.komentar;
+	
+	console.log(rating);
+
+	User
+	.where({ "mbr_username" : username })
+	.fetch()
+	.then(function(current_user){
+		// current_user = current_user.toJSON();
+		// new Komentar({
+		// 	'com_net_id' : body.id,
+		// 	'com_user_id' : current_user.mbr_id,
+		// 	'com_user_nm' : current_user.mbr_name,
+		// 	'com_desc' : komentar,
+		// 	'com_rate' : rating,
+		// 	'net_created': Date.now()
+		// })
+		res.end(JSON.stringify({status: 200, success: "Komentar Berhasil disimpan"}))		
+	});
+		
+};
+
 var warnet = function(req, res){
 	var username = req.session.user;
 	User
@@ -498,6 +538,7 @@ handler = {
 	editProfile: editProfile,
 	updateProfile: updateProfile,
 	warnet: warnet,
+	saveKomentar: saveKomentar, 
 	newWarnet: newWarnet,
 	showWarnet: showWarnet,
 	editWarnet: editWarnet,

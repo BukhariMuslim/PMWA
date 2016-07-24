@@ -2,6 +2,7 @@ var table = function(table){
 	table.increments('com_id').primary();
 	table.string('com_net_id').references('warnet.mbr_id');
 	table.string('com_user_id').references('user.mbr_id');
+	table.string('com_user_nm');
 	table.text('com_desc');
 	table.integer('com_rate');
 	table.dateTime('com_dt');
