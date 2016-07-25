@@ -255,6 +255,32 @@ Tambah Warnet
                 e.preventDefault();
             });
         }
+
+        $('#form_komentar').submit(function(e){
+            $.ajax({
+                type:'POST',
+                url:'/postComment',
+                data: $('#form_komentar').serialize(),
+                dataType: 'json',
+                success: function (data, status, jqXHR) {
+                    var context = JSON.parse(jqXHR.responseText);
+                    if (context.success) $("#pInfo").html(context.success);
+                    else $("#pInfo").html("Simpan Warnet Berhasil");
+                    $('#komentar').val('');
+                    $('#form_komentar input[type="radio"]:first-of-type').prop( "checked", true );
+                    $('#btnClose').prop('href', window.location.href.replace('#!', ''));
+                    $("#modalInfo").openModal();
+                },
+                error: function(xhr, textStatus, errorThrownx){
+                    if (xhr.status === 409) {
+                        $("#pInfo").html(xhr.responseText);
+                        $("#modalInfo").openModal();
+                    }
+                },
+            })
+            
+            e.preventDefault();
+        });
     });
 </script>
 {%- endblock %}
@@ -468,22 +494,22 @@ Tambah Warnet
                             <ul class="collection">
                                 {% for cmt in current_comment %}
                                 <li class="collection-item avatar">
-                                    <img src="/profile_img/{{ cmt.user.mbr_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
+                                    <img src="/profile_img/{{ cmt.com_user_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
                                     <span class="title">
-                                        <a href="/profile/{{ cmt.user.mbr_id }}">
-                                            {{ cmt.user.mbr_name }}
+                                        <a href="/profile/{{ cmt.com_user_id }}">
+                                            {{ cmt.com_user_nm }}
                                         </a>
                                     </span>
                                     <p>{{ cmt.com_desc }}</p>
                                     <span class="secondary-content">
                                         <span class="star-rating">
-                                            <input type="radio" name="rating[]" value="1" {{ "checked=\"true\"" if cmt.com_rate == 1 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="2" {{ "checked=\"true\"" if cmt.com_rate == 2 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="3" {{ "checked=\"true\"" if cmt.com_rate == 3 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="4" {{ "checked=\"true\"" if cmt.com_rate == 4 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="5" {{ "checked=\"true\"" if cmt.com_rate == 5 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="1" {{ "checked=\"true\"" if cmt.com_rate == 1 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="2" {{ "checked=\"true\"" if cmt.com_rate == 2 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="3" {{ "checked=\"true\"" if cmt.com_rate == 3 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="4" {{ "checked=\"true\"" if cmt.com_rate == 4 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="5" {{ "checked=\"true\"" if cmt.com_rate == 5 else "" }} disabled="true"><i></i>
                                         </span>
-                                        {{ cmt.com_dt | date("d M Y H:i:s") }}
+                                        {{ cmt.com_dt | date("fromNow") }}
                                         </span>
                                 </li>
                                 {% else %}
@@ -500,20 +526,20 @@ Tambah Warnet
                         </div>
                         {% if isLogin %}
                         <div class="col s12">
-                            <form name="form_komentar" method="post" action="/admin/add_post">
+                            <form id="form_komentar" name="form_komentar" enctype="multipart/form-data">
                                 <div class="input-field col m6">
-                                    <input id="netId" name="netId" type="hidden" value="{{ current_user.mbr_id }}">
+                                    <input id="netId" name="netId" type="hidden" value="{{ current_net.net_id }}">
                                     <input id="userK" name="userK" type="text" placeholder="Name" value="{{ current_user.mbr_name }}" disabled>
                                     <label for="userK">Anda berkomentar sebagai :</label>
                                 </div>
                                 <div class="col m6">
                                     <label style="display: inline-block; height:30px; margin-right:5px;">Rate</label>
                                     <span class="star-rating">
-                                        <input type="radio" name="rating" value="1" checked><i></i>
-                                        <input type="radio" name="rating" value="2" ><i></i>
-                                        <input type="radio" name="rating" value="3" ><i></i>
-                                        <input type="radio" name="rating" value="4" ><i></i>
-                                        <input type="radio" name="rating" value="5" ><i></i>
+                                        <input type="radio" name="rating[]" value="1" checked><i></i>
+                                        <input type="radio" name="rating[]" value="2" ><i></i>
+                                        <input type="radio" name="rating[]" value="3" ><i></i>
+                                        <input type="radio" name="rating[]" value="4" ><i></i>
+                                        <input type="radio" name="rating[]" value="5" ><i></i>
                                     </span>
                                 </div>
                                 <div class="input-field col m12">
@@ -540,7 +566,7 @@ Tambah Warnet
 			<p id="pInfo"></p>
 		</div>
 		<div class="modal-footer">
-			<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
+			<a id="btnClose" href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Tutup</a>
 		</div>
 	</div>
 

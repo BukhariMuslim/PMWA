@@ -2,6 +2,7 @@ var Warnet = require('../model/warnet'),
 	User = require('../model/user'),
 	Pc = require('../model/pc'),
 	Permission = require('../model/permission'),
+	Komentar = require('../model/komentar'),
 	fs = require('fs'),
 	handler;
 
@@ -25,6 +26,52 @@ var index = function(req, res){
 		});
 };
 
+var search = function(req, res){
+	Warnet.fetchAll()
+		.then(function(current_warnet){
+			Warnet
+			.query(function(qb){
+				qb.orderBy('net_created', 'DESC').limit(10);
+			})
+			.fetchAll()
+			.then(function(new_net) {
+				if (req.query.search) {
+					var search = req.query.search;
+					Warnet
+					.query(function (qb) {
+						qb.where('net_name', 'LIKE', '%' + search + '%');
+					})
+					.fetchAll()
+					.then(function (search_net) {
+						var total = 0;
+						if (search_net.toJSON) {
+							search_net = search_net.toJSON();
+							total = search_net.length;
+						}
+						var result = {
+							total: total,
+							par: search
+						};
+						res.render('./user/index.html',{
+							new_net: new_net.toJSON(),
+							result: result,
+							current_warnet: search_net
+						});
+					})
+				}
+				else {
+					res.render('./user/index.html',{
+						new_net:new_net.toJSON(),
+						current_warnet: current_warnet.toJSON()
+					});
+				}
+			});
+		}).catch(function(err){
+			console.log("Warnet err :" + err);			
+			res.sendStatus(500);
+		});
+};
+
 var showWarnet = function(req, res){
 	var netId = req.params.id;
 	
@@ -35,18 +82,28 @@ var showWarnet = function(req, res){
 			User.where({ "mbr_id" : current_net.net_owner })
 			.fetch()
 			.then(function(current_net_user) {
+				if (current_net_user.toJSON) {
+					current_net_user = current_net_user.toJSON();
+				}
 				Pc.query('where', 'pc_net_id', '=', netId)
 				.fetchAll()
 				.then(function(current_pc) {
 					if (current_pc.toJSON) {
 						current_pc = current_pc.toJSON();
-						console.log('in');
 					}
-					console.log(current_pc);
-					res.render('./user/net.html',{
-						current_net: current_net,
-						current_pc: current_pc,
-						current_net_user: current_net_user.toJSON()
+					Komentar
+					.where({ "com_net_id" : netId })
+					.fetchAll()
+					.then(function(current_comment) {
+						if (current_comment.toJSON) {
+							current_comment = current_comment.toJSON();
+						}
+						res.render('./user/net.html',{
+							current_net: current_net,
+							current_pc: current_pc,
+							current_comment: current_comment,
+							current_net_user: current_net_user
+						});
 					});
 				});
 			})
@@ -212,9 +269,10 @@ handler = {
 	login: login,
 	register: register,
 	registering: registering,
-	showWarnet : showWarnet,
-	profileImg : profileImg,
-	netImg : netImg
+	showWarnet: showWarnet,
+	profileImg: profileImg,
+	netImg: netImg,
+	search: search
 };
 
 module.exports = handler;

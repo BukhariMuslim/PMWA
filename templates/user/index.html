@@ -64,7 +64,7 @@
 		<div class="container">
 			<div class="row">
 				<div class="col s12 m8 push-m4 l9 push-l3">
-					<!--{{ warnetTmp.search(warnet) }}-->
+					{{ warnetTmp.search(result) }}
 
 					{% for warnet in current_warnet %}
 						{{ warnetTmp.warnetList(warnet) }}
@@ -87,13 +87,6 @@
 		<div class="modal-content">
 			<h4>Pemberitahuan</h4>
 			<p id="Text">
-				<!--<?php
-					if (!empty($_GET["success"])) {
-                        if ($_GET["success"] == "1") echo "Selamat Datang, \"$sessionName\""; 
-                        else echo "Logout berhasil";                         
-                    }
-                    else echo "Logout berhasil";
-				?>-->
 			</p>
 		</div>
 		<div class="modal-footer">
@@ -101,23 +94,6 @@
 		</div>
 	</div> 
 
-<!--<h1>Login</h1>
-<form action="/result" method="post">
-	Username: <input type="text" name="username"> <br>
-	Password: <input type="password" name="password"><br>
-	<input type="submit"><br>
-</form>-->
-<!--<section>
-	{%- for post in posts %}
-	<article>
-		<header>
-			<h1>{{ post.title }}</h1>
-			<span>Author: {{ post.username }}</span>
-		</header>
-		{{ post.content }}
-	</article>
-	{%- endfor %}
-</section>-->
 {%- endblock %}
 
 {%- block footer %}

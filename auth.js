@@ -10,6 +10,15 @@ function user(req, res, next){
 	}
 };
 
+function search(req, res, next){
+	if (typeof req.session.user !== 'undefined'){
+		return next();
+	}
+	else {
+		hUser.search(req, res, next);
+	}
+};
+
 function net(req, res, next){
 	if (typeof req.session.user !== 'undefined'){
 		return next();
@@ -40,7 +49,8 @@ function admin(req, res, next){
 var auth = {
 	user : user,
 	net : net,
-	admin : admin
+	admin : admin,
+	search : search
 }
 
 module.exports = auth;

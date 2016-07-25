@@ -36,6 +36,63 @@ var index = function(req, res){
 	});	
 };
 
+var search = function(req, res){
+	User
+	.where({"mbr_username":req.session.user})
+	.fetch()
+	.then(function(current_user){
+		Warnet.fetchAll()
+		.then(function(current_warnet){
+			Warnet
+			.query(function(qb){
+				qb.orderBy('net_created', 'DESC').limit(10);
+			})
+			.fetchAll()
+			.then(function(new_net) {
+				if (req.query.search) {
+					var search = req.query.search;
+					Warnet
+					.query(function (qb) {
+						qb.where('net_name', 'LIKE', '%' + search + '%');
+					})
+					.fetchAll()
+					.then(function (search_net) {
+						var total = 0;
+						if (search_net.toJSON) {
+							search_net = search_net.toJSON();
+							total = search_net.length;
+						}
+						var result = {
+							total: total,
+							par: search
+						};
+						res.render('./admin/index.html',{
+							current_user:current_user.toJSON(),
+							new_net: new_net.toJSON(),
+							result: result,
+							current_warnet: search_net
+						});
+					})
+				}
+				else {
+					res.render('./admin/index.html',{
+						current_user:current_user.toJSON(),
+						new_net:new_net.toJSON(),
+						current_warnet: current_warnet.toJSON()
+					});
+				}
+			});
+		}).catch(function(err){
+			console.log("Warnet err :" + err);			
+			res.sendStatus(500);
+		});
+	})
+	.catch(function(err){
+		console.log("Warnet user :" + err);
+		res.sendStatus(500);
+	});	
+};
+
 var logout = function(req, res){
 	req.session.destroy(function (err) {
 		res.redirect('../');
@@ -196,6 +253,10 @@ var saveWarnet = function (req, res) {
 
 	if (!jlh) jlh = 0;
 
+	if (name == '') { 
+		return res.status(409).send(err_msg + " Nama tidak boleh kosong");
+	}
+
 	User
 		.where({ "mbr_username" : username })
 		.fetch()
@@ -287,6 +348,10 @@ var updateWarnet = function (req, res) {
 
 	if (!jlh) jlh = 0;	
 
+	if (name == '') { 
+		return res.status(409).send(err_msg + " Nama tidak boleh kosong");
+	}
+
 	new Warnet()
 	.where({ 'net_id': body.id })
 	.save({
@@ -341,25 +406,37 @@ var updateWarnet = function (req, res) {
 var saveKomentar = function(req, res){
 	var username = req.session.user,
 		body = req.body,
-		rating = body.ratingPost,
+		rating = body.rating,
 		komentar = body.komentar;
 	
-	console.log(rating);
+	if (komentar == '') { 
+		return res.status(409).send(err_msg + " Komentar tidak boleh kosong");
+	}
 
 	User
 	.where({ "mbr_username" : username })
 	.fetch()
 	.then(function(current_user){
-		// current_user = current_user.toJSON();
-		// new Komentar({
-		// 	'com_net_id' : body.id,
-		// 	'com_user_id' : current_user.mbr_id,
-		// 	'com_user_nm' : current_user.mbr_name,
-		// 	'com_desc' : komentar,
-		// 	'com_rate' : rating,
-		// 	'net_created': Date.now()
-		// })
-		res.end(JSON.stringify({status: 200, success: "Komentar Berhasil disimpan"}))		
+		current_user = current_user.toJSON();
+		new Komentar({
+			'com_net_id' : body.netId,
+			'com_user_id' : current_user.mbr_id,
+			'com_user_nm' : current_user.mbr_name,
+			'com_desc' : komentar,
+			'com_rate' : rating[0],
+			'com_dt': Date.now()
+		}).save()
+		.then(function(komentar_dat) {
+			Komentar
+			.where({ "com_net_id" : body.netId })
+			.fetchAll()
+			.then(function (current_comment){
+				if (current_comment.toJSON) {
+					current_comment = current_comment.toJSON();
+				}
+				res.end(JSON.stringify({status: 200, success: "Komentar Berhasil disimpan", current_comment: current_comment }))		
+			});
+		});
 	});
 		
 };
@@ -544,7 +621,8 @@ handler = {
 	editWarnet: editWarnet,
 	saveWarnet: saveWarnet,
 	updateWarnet: updateWarnet,
-	deleteWarnet : deleteWarnet
+	deleteWarnet : deleteWarnet,
+	search: search
 };
 
 module.exports = handler;

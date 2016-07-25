@@ -255,40 +255,6 @@ Tambah Warnet
                 e.preventDefault();
             });
         }
-
-        $('#form_komentar').submit(function(e){
-            console.log(this);
-            var formData = new FormData($(this)[0]);
-            $.ajax({
-                type:'POST',
-                url:'/postComment',
-                data : formData,
-                contentType: false,
-                processData: false,
-                cache: false,
-                // beforeSend: function(){
-                //     $('#send').prop( "disabled", true);
-                // },
-                success: function (data, status, jqXHR) {
-                    var context = JSON.parse(jqXHR.responseText);
-                    if (context.success) $("#pInfo").html(context.success);
-                    else $("#pInfo").html("Simpan Warnet Berhasil");
-                    $("#modalInfo").openModal();
-                    $('#form_komentar :input').val('');
-                },
-                error: function(xhr, textStatus, errorThrownx){
-                    if (xhr.status === 409) {
-                        $("#pInfo").html(xhr.responseText);
-                        $("#modalInfo").openModal();
-                    }
-                },
-                // complete : function() {
-                //     $('#send').prop( "disabled", false);
-                // }
-            })
-            
-            e.preventDefault();
-        });
     });
 </script>
 {%- endblock %}
@@ -502,7 +468,7 @@ Tambah Warnet
                             <ul class="collection">
                                 {% for cmt in current_comment %}
                                 <li class="collection-item avatar">
-                                    <img src="/profile_img/{{ cmt,com_user_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
+                                    <img src="/profile_img/{{ cmt.com_user_id }}" alt="" width="24px" class="circle responsive-img comment-img" >
                                     <span class="title">
                                         <a href="/profile/{{ cmt.com_user_id }}">
                                             {{ cmt.com_user_nm }}
@@ -511,13 +477,13 @@ Tambah Warnet
                                     <p>{{ cmt.com_desc }}</p>
                                     <span class="secondary-content">
                                         <span class="star-rating">
-                                            <input type="radio" name="rating[]" value="1" {{ "checked=\"true\"" if cmt.com_rate == 1 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="2" {{ "checked=\"true\"" if cmt.com_rate == 2 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="3" {{ "checked=\"true\"" if cmt.com_rate == 3 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="4" {{ "checked=\"true\"" if cmt.com_rate == 4 else "" }} disabled="true"><i></i>
-                                            <input type="radio" name="rating[]" value="5" {{ "checked=\"true\"" if cmt.com_rate == 5 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="1" {{ "checked=\"true\"" if cmt.com_rate == 1 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="2" {{ "checked=\"true\"" if cmt.com_rate == 2 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="3" {{ "checked=\"true\"" if cmt.com_rate == 3 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="4" {{ "checked=\"true\"" if cmt.com_rate == 4 else "" }} disabled="true"><i></i>
+                                            <input type="radio" name="rating{{ cmt.com_id }}" value="5" {{ "checked=\"true\"" if cmt.com_rate == 5 else "" }} disabled="true"><i></i>
                                         </span>
-                                        {{ cmt.com_dt | date("d M Y H:i:s") }}
+                                        {{ cmt.com_dt | date("fromNow") }}
                                         </span>
                                 </li>
                                 {% else %}
@@ -531,37 +497,7 @@ Tambah Warnet
                                 </li>
                                 {% endfor %}
                             </ul>               
-                        </div>
-                        {% if isLogin %}
-                        <div class="col s12">
-                            <form id="form_komentar" name="form_komentar" enctype="multipart/form-data">
-                                <div class="input-field col m6">
-                                    <input id="netId" name="netId" type="hidden" value="{{ current_user.mbr_id }}">
-                                    <input id="userK" name="userK" type="text" placeholder="Name" value="{{ current_user.mbr_name }}" disabled>
-                                    <label for="userK">Anda berkomentar sebagai :</label>
-                                </div>
-                                <div class="col m6">
-                                    <label style="display: inline-block; height:30px; margin-right:5px;">Rate</label>
-                                    <span class="star-rating">
-                                        <input type="radio" name="ratingPost[]" value="1" checked><i></i>
-                                        <input type="radio" name="ratingPost[]" value="2" ><i></i>
-                                        <input type="radio" name="ratingPost[]" value="3" ><i></i>
-                                        <input type="radio" name="ratingPost[]" value="4" ><i></i>
-                                        <input type="radio" name="ratingPost[]" value="5" ><i></i>
-                                    </span>
-                                </div>
-                                <div class="input-field col m12">
-                                    <textarea id="komentar" name="komentar" placeholder="Komentar" class="materialize-textarea" length="200" tabindex="12"></textarea>
-                                    <label for="komentar">Komentar</label>
-                                </div>
-                                <div class="col m12">
-                                    <button class="btn waves-effect waves-light white-text right tooltipped" type="submit" name="post" data-tooltip="Post" tabindex="5">Post
-                                        <i class="material-icons right">send</i>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        {% endif %}                
+                        </div>              
                     </div>
                 </div>
             </div>

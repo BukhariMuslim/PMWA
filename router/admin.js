@@ -25,6 +25,7 @@ router = function(app){
 	r.delete('/warnet/delete/:id', auth.user, h.deleteWarnet);
 	r.get('/warnet/:id', auth.net, h.showWarnet);
 	r.get('/admin/logout', auth.user, h.logout);
+	r.get('/search/', auth.search, h.search);
 	app.use(r);
 };
 
